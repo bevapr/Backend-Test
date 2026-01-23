@@ -10,5 +10,6 @@ public class Order {
 
     @Id
     private String orderId;
+    private double amount;
     private String status;
 }

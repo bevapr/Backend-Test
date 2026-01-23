@@ -1,7 +1,11 @@
 package com.example.order.service;
 
-import com.example.order.dto.OrderResponse;
+import com.example.order.model.Order;
+
+import java.util.Optional;
 
 public interface OrderService {
-    OrderResponse updateStatus(String orderId, String status);
+    Order createOrder(Order order);
+    Optional<Order> findById(String orderId);
+    Order save(Order order);
 }

@@ -13,6 +13,7 @@ public class PaymentRequest {
 
     private String transactionId;
     private String orderId;
+    private String userId;
     private double amount;
 
 }

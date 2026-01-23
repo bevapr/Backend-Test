@@ -1,5 +1,6 @@
 package com.example.notification.service;
 
+import com.example.notification.dto.NotificationRequest;
 import com.example.notification.dto.NotificationResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +16,10 @@ public class NotificationServiceImpl implements NotificationService {
     private static final Logger logger = LoggerFactory.getLogger(NotificationServiceImpl.class);
 
     @Override
-    public NotificationResponse sendNotification(String userId, String message) {
+    public NotificationResponse sendNotification(NotificationRequest request) {
+        String userId = request.getUserId();
+        String message = request.getMessage();
+
         String key = userId + message;
         boolean alreadySent = sentTransactionIds.contains(key);
 
@@ -29,3 +33,4 @@ public class NotificationServiceImpl implements NotificationService {
         return new NotificationResponse(userId, message, !alreadySent);
     }
 }
+

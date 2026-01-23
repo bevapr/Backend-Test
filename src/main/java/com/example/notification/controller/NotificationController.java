@@ -1,13 +1,13 @@
 package com.example.notification.controller;
 
+import com.example.notification.dto.NotificationRequest;
+import com.example.notification.dto.NotificationResponse;
 import com.example.notification.service.NotificationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/notifications")
@@ -20,8 +20,8 @@ public class NotificationController {
     }
 
     @PostMapping("/send")
-    public ResponseEntity<String> send(@RequestBody Map<String, String> request) {
-        notificationService.sendNotification(request.get("userId"), request.get("message"));
-        return ResponseEntity.ok("Sent");
+    public ResponseEntity<NotificationResponse> send(@RequestBody NotificationRequest request) {
+        NotificationResponse response = notificationService.sendNotification(request);
+        return ResponseEntity.ok(response);
     }
 }

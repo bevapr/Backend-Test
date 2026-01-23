@@ -1,5 +1,6 @@
 package com.example.payment.service;
 
+import com.example.payment.dto.PaymentRequest;
 import com.example.payment.dto.PaymentResponse;
 import com.example.payment.model.Payment;
 import com.example.payment.repository.PaymentRepository;
@@ -10,13 +11,14 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
-    private static final Logger logger = LoggerFactory.getLogger(PaymentServiceImpl.class);
     private final RestTemplate restTemplate;
+    private static final Logger logger = LoggerFactory.getLogger(PaymentServiceImpl.class);
 
     public PaymentServiceImpl(PaymentRepository paymentRepository, RestTemplate restTemplate) {
         this.paymentRepository = paymentRepository;
@@ -24,37 +26,39 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public PaymentResponse createPayment(Payment payment) {
-        Payment savedPayment = paymentRepository.findById(payment.getTransactionId())
-                .orElseGet(() -> {
-                    boolean success = chargeGateway(payment);
-                    payment.setCompleted(success);
-                    Payment p = paymentRepository.save(payment);
-                    logger.info("Payment saved: {}", p.getTransactionId());
-                    return p;
-                });
+    public PaymentResponse createPayment(PaymentRequest request) {
+        Payment payment = new Payment();
+        payment.setTransactionId(UUID.randomUUID().toString());
+        payment.setOrderId(request.getOrderId());
+        payment.setUserId(request.getUserId());
+        payment.setAmount(request.getAmount());
 
-        if (savedPayment.isCompleted()) {
+        boolean success = chargeGateway(payment);
+        payment.setCompleted(success);
+        paymentRepository.save(payment);
+
+        if (success) {
             try {
-                String orderUrl = "http://localhost:8081/orders/update-status?orderId=" + savedPayment.getOrderId() + "&status=PAID";
-                restTemplate.postForObject(orderUrl, null, String.class);
-                logger.info("Order updated for orderId: {}", savedPayment.getOrderId());
+                String updateOrderUrl = "http://localhost:8081/orders/update-status?orderId="
+                        + payment.getOrderId() + "&status=PAID";
+                restTemplate.postForObject(updateOrderUrl, null, String.class);
+                logger.info("Order status updated via API for orderId {}", payment.getOrderId());
             } catch (Exception e) {
-                logger.error("Order service timeout: {}", e.getMessage());
+                logger.error("Failed to update order via API: {}", e.getMessage());
             }
 
             try {
                 Map<String, String> notif = new HashMap<>();
-                notif.put("userId", savedPayment.getUserId());
+                notif.put("userId", payment.getUserId());
                 notif.put("message", "Payment berhasil!");
                 restTemplate.postForObject("http://localhost:8082/notifications/send", notif, String.class);
-                logger.info("Notification sent to userId: {}", savedPayment.getUserId());
+                logger.info("Notification sent via API to userId {}", payment.getUserId());
             } catch (Exception e) {
-                logger.error("Notification service timeout: {}", e.getMessage());
+                logger.error("Failed to send notification via API: {}", e.getMessage());
             }
         }
 
-        return mapToResponse(savedPayment);
+        return mapToResponse(payment);
     }
 
     private boolean chargeGateway(Payment payment) {
@@ -78,3 +82,4 @@ public class PaymentServiceImpl implements PaymentService {
         );
     }
 }
+
