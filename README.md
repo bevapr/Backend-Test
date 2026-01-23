@@ -10,7 +10,7 @@ Untuk kesederhanaan, semua microservice diimplementasikan dalam satu proyek Spri
     - Memanggil Order dan Notification service setelah pembayaran berhasil
 
 2. **Order Service** (`com.example.order`)
-    - Mengelola update status order
+    - Mengelola pembuatan order
     - Idempotent: status hanya diubah jika berbeda dari status saat ini
     - Mencatat semua operasi untuk traceability
 
@@ -23,7 +23,7 @@ Untuk kesederhanaan, semua microservice diimplementasikan dalam satu proyek Spri
 
 ## Asumsi
 - Single project tapi terstruktur sebagai 3 microservice terpisah (package berbeda)
-- Alur `Payment → Order → Notification` disimulasikan menggunakan panggilan HTTP via RestTemplate
+- Alur `Order -> Paymment -> Notification` disimulasikan menggunakan panggilan HTTP via RestTemplate
 - `RestTemplate` dikonfigurasi dengan timeout koneksi dan read untuk mensimulasikan masalah jaringan
 - Idempotency menjamin:
     - PaymentService tidak melakukan double charge walaupun callback diterima berkali-kali
